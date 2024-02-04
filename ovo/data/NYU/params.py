@@ -16,6 +16,7 @@ NYU_class_names = [
     "objs",
 ]
 class_weights = torch.FloatTensor([0.05, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+# class_weights = torch.FloatTensor([0.01, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
 class_freq_1_4 = np.array(
     [

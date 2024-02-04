@@ -8,9 +8,9 @@ kitti_root: '/path/to/semantic_kitti'
 kitti_preprocess_root: '/path/to/kitti/preprocess/folder'
 kitti_logdir: '/path/to/semantic_kitti/logdir'
 
-NYU_root: '/path/to/NYU/depthbin'
-NYU_preprocess_root: '/path/to/NYU/preprocess/folder'
-logdir: '/path/to/NYU/logdir'
+NYU_root: '/root/code/OVO-Open-Vocabulary-Occupancy/dataset/NYU/depthbin'
+NYU_preprocess_root: '/root/code/OVO-Open-Vocabulary-Occupancy/dataset/NYU/processed_ov'
+logdir: '/root/code/OVO-Open-Vocabulary-Occupancy/log'
 
 
 fp_loss: true 
@@ -43,6 +43,9 @@ confidence_weight: true
 voxel_pixel_align: true
 voxel_word_align: true
 align_2d: true
+# voxel_pixel_align: false
+# voxel_word_align: false
+# align_2d: false
 VPA_weight: 1.0
 NYU_prepare_total: /data/nyu_preprocess_total
 kitti_prepare_total: /data/kitti_preprocess_total_mini_30

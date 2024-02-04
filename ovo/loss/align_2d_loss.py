@@ -11,15 +11,24 @@ class Align2dLoss:
         self.cross_entropy_loss = nn.CrossEntropyLoss()
         
     def get_align_2d_loss(self, aligned_feat, clip_gt):
-        aligned_feat = F.interpolate(
-            aligned_feat,
-            size=(80, 80),
-            mode="bilinear",
-            align_corners=True,
-        )
+        # aligned_feat = F.interpolate(
+        #     aligned_feat,
+        #     size=(80, 80),
+        #     mode="bilinear",
+        #     align_corners=True,
+        # )
+        # clip_gt = F.interpolate(
+        #     clip_gt,
+        #     size=(80, 80),
+        #     mode="bilinear",
+        #     align_corners=True,
+        # )
         
-        aligned_feat = aligned_feat.flatten(2).squeeze().permute(1,0)
-        clip_gt = clip_gt.flatten(2).squeeze().permute(1,0)
+        # aligned_feat = aligned_feat.flatten(2).squeeze().permute(1,0)
+        # clip_gt = clip_gt.flatten(2).squeeze().permute(1,0)
+
+        aligned_feat = aligned_feat.flatten(2)
+        clip_gt = clip_gt.flatten(2)
         
         aligned_feat = F.normalize(aligned_feat, dim = 1)
         clip_gt = F.normalize(clip_gt, dim = 1)

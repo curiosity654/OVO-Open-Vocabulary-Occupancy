@@ -1,18 +1,20 @@
 import numpy as np
+from numba import jit
 import os
 import pickle
 import json
 from tqdm import tqdm
 import sys
+from mpire import WorkerPool
 
 
 class SdfSolver:
-    def __init__(self, file_name=None, observation_pt=None) -> None:
+    def __init__(self, file_name=None, observation_pt=None, pkl_root=None, save_root=None) -> None:
         self.observation_pt = observation_pt
         self.voxels = None
         self.invalid_lbl = [0, 255]
-        self.pkl_root = "/data/nyu_preprocess_cbt/base/NYUtrain/"
-        self.save_root = "./nyu_occ_reslut"
+        self.pkl_root = pkl_root
+        self.save_root = save_root
         self.file_name = file_name
         self.get_input(file_name)
         self.voxel_size = 0.08
@@ -107,6 +109,7 @@ class SdfSolver:
                 if [ext_x_idx, ext_y_idx, ext_z_idx] not in self.occ:
                     self.occ.append([ext_x_idx, ext_y_idx, ext_z_idx])
 
+    # @jit(nopython=False)
     def scan_shot(self, cur_voxel_pt):
         # shot one scan and paint all voxel on the line
         start_pt_coord = self.observation_pt
@@ -160,14 +163,28 @@ class SdfSolver:
         # step3. Dump result array
         self.dump_result()
 
+def process(info, file_name):
+    pkl_root="dataset/NYU/processed_ov/base/NYUtest"
+    save_root="dataset/NYU/occ_result/base/NYUtest"
+    k = file_name.split(".")[0]
+    print("processing ", k)
+    sdf_solver = SdfSolver(k, info[k], pkl_root, save_root)
+    sdf_solver.process()
 
 if __name__ == "__main__":
     observation_pt_file = "ovo/data/NYU/camera_position_nyu.json"
     with open(observation_pt_file, "r") as f:
         info = json.load(f)
 
-    pkl_root = sys.argv[1]  # /path/to/nyu_preprocess_ov/base/NYUtrain/
+    pkl_root="dataset/NYU/processed_ov/base/NYUtest"    
+    files = sorted(os.listdir(pkl_root))
 
-    for k in tqdm(info.keys()):
-        sdf_solver = SdfSolver(k, info[k])
-        sdf_solver.process()
+    with WorkerPool(n_jobs=20, shared_objects=info) as pool:
+        results = pool.map(process, files, progress_bar=True)
+
+    # for k in tqdm(info.keys()):
+    #     if k + ".pkl" not in files:
+    #         continue
+    #     print("processing ", k)
+    #     sdf_solver = SdfSolver(k, info[k], pkl_root=pkl_root, save_root=save_root)
+    #     sdf_solver.process()

@@ -31,14 +31,14 @@ class NYUDataset(Dataset):
         self.n_relations = n_relations
         self.frustum_size = frustum_size
         self.n_classes = 12
-        self.root = os.path.join(root, "depthbin", "NYU" + split)
+        self.root = os.path.join(root, "NYU" + split)
         self.preprocess_root = preprocess_root
         self.occ_root = occ_root
         self.base_dir = os.path.join(preprocess_root, "base", "NYU" + split)
         self.mask_dir = os.path.join(
             preprocess_root, "nyu_masked", "NYU" + split)
 
-        self.clip_gt_dir = "/data/lseg_embedding_nyu"
+        self.clip_gt_dir = "dataset/NYU/lseg_embedding_nyu"
 
         self.fliplr = 0.0
 
@@ -82,7 +82,7 @@ class NYUDataset(Dataset):
         # with open(mask_filepath, "rb") as handle:
         #     mask_data = pickle.load(handle)
 
-        clip_gt_path = os.path.join(self.clip_gt_dir, name + ".pkl")
+        clip_gt_path = os.path.join(self.clip_gt_dir, name + "_color.pkl")
         with open(clip_gt_path, "rb") as handle:
             clip_gt = pickle.load(handle)
 
@@ -211,7 +211,9 @@ def preprocess_valid_pairs(naive):
         idx = 0
 
         if not naive:
-            lseg_feat = torch.tensor(data['lseg_feat'][0])
+            lseg_feat = torch.tensor(data['lseg_feat']).float()
+            # interpolate 2x
+            # lseg_feat = torch.nn.functional.interpolate(lseg_feat.unsqueeze(0), scale_factor=2, mode='bilinear', align_corners=False).squeeze(0)
             lseg_clip_similirty = torch.einsum(
                 "kd,dwh->kwh", k_word_tokens, lseg_feat)
             lseg_lbl = torch.argmax(lseg_clip_similirty, dim=0)
@@ -234,6 +236,10 @@ def preprocess_valid_pairs(naive):
                             eq = lseg_lbl[u//6, v//8] == gt[i, j, k]
                             approx_eq = (
                                 lseg_lbl[u//6, v//8] in novel_class) and (gt[i, j, k] in novel_class)
+                            # if un_occlusion:
+                            #     tmp_pair = [(int(u), int(v)), (int(
+                            #         i), int(j), int(k)), int(gt[i, j, k])]
+                            #     valid_pairs.append(tmp_pair)
                             if un_occlusion and (eq or approx_eq):
                                 tmp_pair = [(int(u), int(v)), (int(
                                     i), int(j), int(k)), int(gt[i, j, k])]
@@ -251,9 +257,10 @@ def preprocess_valid_pairs(naive):
 
 
 if __name__ == "__main__":
-    novel_class = []  # [6, 8, 11]
-    nyu_root = ""  # /path/to/NYU_dataset
-    nyu_preprocess_root = ""  # /path/to/nyu_preprocess_ori
-    nyu_occ_root = ""  # /path/to/nyu_occ_reslut
-    clip_text_gt_feat_path = ""  # /path/to/nyu_prompt_embedding.json
+    novel_class = [6, 8, 11]  # [6, 8, 11]
+    nyu_root = "dataset/NYU/depthbin"  # /path/to/NYU_dataset
+    nyu_preprocess_root = "dataset/NYU/processed_ov"  # /path/to/nyu_preprocess_ori
+    nyu_occ_root = "dataset/NYU/occ_result"  # /path/to/nyu_occ_result
+    clip_text_gt_feat_path = "tools/prompt_embedding/nyu_prompt_embedding.json"  # /path/to/nyu_prompt_embedding.json
     preprocess_valid_pairs(naive=False)
+    # preprocess_valid_pairs(naive=True)

@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import matlib as mb
 from tqdm import tqdm
 import os
 import glob
@@ -66,7 +67,7 @@ def _rle2voxel(rle, voxel_size=(240, 144, 240), rle_filename=""):
         seg_label_val = (
             seg_class_map[check_val] if check_val != 255 else 255
         )  # 37 classes to 12 classes
-        seg_label[vox_idx: vox_idx + check_iter] = np.matlib.repmat(
+        seg_label[vox_idx: vox_idx + check_iter] = mb.repmat(
             seg_label_val, 1, check_iter
         )
         vox_idx = vox_idx + check_iter
@@ -143,7 +144,7 @@ def _downsample_label(label, voxel_size=(240, 144, 240), downscale=4):
     return label_downscale
 
 
-@hydra.main(config_name="../../config/monoscene.yaml")
+@hydra.main(config_name="../../config/ovo.yaml")
 def main(config: DictConfig):
     scene_size = (240, 144, 240)
     for split in ["train", "test"]:

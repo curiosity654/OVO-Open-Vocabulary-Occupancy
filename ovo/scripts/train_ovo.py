@@ -16,7 +16,7 @@ from ovo.data.NYU.params import (
 from ovo.data.NYU.nyu_dm import NYUDataModule
 from ovo.models.ovo import OVO
 from pytorch_lightning import Trainer
-from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 hydra.output_subdir = None
@@ -129,7 +129,8 @@ def main(config: DictConfig):
     )
 
     if config.enable_log:
-        logger = TensorBoardLogger(save_dir=logdir, name=exp_name, version="")
+        # logger = TensorBoardLogger(save_dir=logdir, name=exp_name, version="")
+        logger = WandbLogger(project="Omniscene", name=exp_name)
         lr_monitor = LearningRateMonitor(logging_interval="step")
         checkpoint_callbacks = [
             ModelCheckpoint(
@@ -155,6 +156,7 @@ def main(config: DictConfig):
             deterministic=False,
             max_epochs=max_epochs,
             gpus=config.n_gpus,
+            accumulate_grad_batches=config.accumulate_grad_batches,
             logger=logger,
             check_val_every_n_epoch=1,
             log_every_n_steps=10,

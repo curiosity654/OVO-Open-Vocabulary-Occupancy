@@ -74,7 +74,9 @@ def collate_fn_train(batch):
         valid_word_feat = torch.from_numpy(input_dict["valid_word_feat"])
         valid_word_feats.append(valid_word_feat)
 
-        lseg_2d = torch.from_numpy(input_dict["lseg_2d"])
+        # lseg_2d = torch.from_numpy(input_dict["lseg_2d"]).float()
+        # lseg_2d = torch.nn.functional.interpolate(lseg_2d.unsqueeze(0), scale_factor=2, mode='bilinear', align_corners=False).squeeze(0)
+        lseg_2d = input_dict["lseg_2d"]
         lseg_2ds.append(lseg_2d)
 
     ret_data = {
@@ -86,13 +88,14 @@ def collate_fn_train(batch):
         "img": torch.stack(imgs),
         "target": torch.stack(targets),
         "lseg_2d": torch.stack(lseg_2ds),
-        "valid_img_idx": torch.stack(valid_img_idxs),
-        "valid_img_weight": torch.stack(valid_img_weights),
-        "valid_img_feat": torch.stack(valid_img_feats),
-        "valid_word_idx": torch.stack(valid_word_idxs),
-        "valid_word_lbl": torch.stack(valid_word_lbls),
-        "valid_word_feat": torch.stack(valid_word_feats)
+        "valid_img_idx": valid_img_idxs,
+        "valid_img_weight": valid_img_weights,
+        "valid_img_feat": valid_img_feats,
+        "valid_word_idx": valid_word_idxs,
+        "valid_word_lbl": valid_word_lbls,
+        "valid_word_feat": valid_word_feats
     }
+
     for key in data:
         ret_data[key] = data[key]
     return ret_data

@@ -145,13 +145,13 @@ class OVO(pl.LightningModule):
                 if x3d is None:
                     x3d = self.projects[str(scale_2d)](
                         x_rgb["1_" + str(scale_2d)][i],
-                        projected_pix // scale_2d,
+                        torch.div(projected_pix, scale_2d, rounding_mode='floor'),
                         fov_mask,
                     )
                 else:
                     x3d += self.projects[str(scale_2d)](
                         x_rgb["1_" + str(scale_2d)][i],
-                        projected_pix // scale_2d,
+                        torch.div(projected_pix, scale_2d, rounding_mode='floor'),
                         fov_mask,
                     )
             x3ds.append(x3d)
@@ -234,9 +234,17 @@ class OVO(pl.LightningModule):
             # 2d align loss is 
             if self.align_2d and self.dataset != "kitti":
                 aligned_feat = out_dict["aligned_2d_feat"]
-                align_loss = self.align_2d_loss.get_align_2d_loss(aligned_feat, batch["lseg_2d"][:,0,:,:,:])
+                # align_loss = self.align_2d_loss.get_align_2d_loss(aligned_feat, batch["lseg_2d"][:,0,:,:,:])
+                align_loss = self.align_2d_loss.get_align_2d_loss(aligned_feat, batch["lseg_2d"])
                 loss += align_loss * 0.1
             
+                self.log(
+                    step_type + "/loss_align_2d",
+                    align_loss.detach() * 0.1,
+                    on_epoch=True,
+                    sync_dist=True,
+                )
+
             #3d align loss is 
             aligned_feat = out_dict["aligned_vox_feat"]
             img_align_loss, word_align_loss = self.align_23d_loss.get_align_23d_loss(aligned_feat, self.dataset, batch["valid_img_idx"], batch["valid_img_weight"], batch["valid_img_feat"],
@@ -245,8 +253,23 @@ class OVO(pl.LightningModule):
 
             if self.voxel_pixel_align:
                 loss += (img_align_loss * self.VPA_weight)
+                
+                self.log(
+                    step_type + "/loss_voxel_pixel_align",
+                    (img_align_loss * self.VPA_weight).detach(),
+                    on_epoch=True,
+                    sync_dist=True,
+                )
+
             if self.voxel_word_align:
                 loss += word_align_loss
+
+                self.log(
+                    step_type + "/loss_voxel_word_align",
+                    word_align_loss.detach(),
+                    on_epoch=True,
+                    sync_dist=True,
+                )
 
         if self.fp_loss and step_type != "test":
             frustums_masks = torch.stack(batch["frustums_masks"])

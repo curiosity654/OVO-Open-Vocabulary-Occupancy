@@ -137,14 +137,14 @@ We propose Open Vocabulary Occupancy (OVO), a novel approach that allows semanti
 
 ```shell
 # train_nyu.sh
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
+CUDA_VISIBLE_DEVICES=0,1 \
 python ./ovo/scripts/train_ovo.py \
 dataset=NYU \
-NYU_root=/path/to/NYU_dataset/depthbin/ \
-NYU_preprocess_root=/path/to/nyu_preprocess_ov \
-NYU_prepare_total=/path/to/nyu_preprocess_total \
+NYU_root=../../../dataset/NYU/depthbin/ \
+NYU_preprocess_root=../../../dataset/NYU/processed_ov/ \
+NYU_prepare_total=../../../dataset/NYU/processed_total/ \
 logdir=./outputs \
-n_gpus=8 batch_size=8
+n_gpus=2 batch_size=4
 ```
 
 **SemanticKITTI**
@@ -170,11 +170,11 @@ n_gpus=8 batch_size=8
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 python ovo/scripts/infer_ovo.py \
 dataset=NYU \
-NYU_root=/path/to/NYU_dataset/depthbin/ \
-NYU_preprocess_root=/path/to/nyu_preprocess_ori \
-+word_path=ovo/prompt_embedding/nyu_prompt_embedding.json \
-+model_path=/path/to/model_file/last.ckpt \
-+output_path=/data/visualization_file/ \
+NYU_root=/root/code/OVO-Open-Vocabulary-Occupancy/dataset/NYU/depthbin/ \
+NYU_preprocess_root=/root/code/OVO-Open-Vocabulary-Occupancy/dataset/NYU/processed/ \
++word_path=/root/code/OVO-Open-Vocabulary-Occupancy/tools/prompt_embedding/nyu_prompt_embedding.json \
++model_path=../../2024-01-20/16-31-54/Omniscene/zzjuvg76/checkpoints/last.ckpt \
++output_path=../../2024-01-20/16-31-54/inference \
 +novel_class_lbl=[6,8,11] \
 +target_lbl=11 \
 n_gpus=1 batch_size=1 \

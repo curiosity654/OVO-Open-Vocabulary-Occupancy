@@ -7,7 +7,7 @@ import json
 
 class ClipAlignmentLoss:
     def __init__(self):
-        self.clip_text_gt_feat_path = "/dzc_workspace/clip/CLIP-main/nyu_prompt_embedding.json"
+        self.clip_text_gt_feat_path = "/root/code/OVO-Open-Vocabulary-Occupancy/tools/prompt_embedding/nyu_prompt_embedding.json"
         self.cls_idx_mapping = {0:"empty", 1:"ceiling",2:"floor",3:"wall",4:"window", 5:"chair", 
                       6:"bed", 7:"sofa", 8:"table", 9:"tv", 10:"furniture", 11:"object"}
         self.clip_dict = {}

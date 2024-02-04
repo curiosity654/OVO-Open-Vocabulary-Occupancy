@@ -1,4 +1,5 @@
 import os
+import torch
 from torch.utils.data import Dataset
 import numpy as np
 import pickle
@@ -45,25 +46,28 @@ def process_one_frame(file_name, valid_info):
     valid_word_lbl = []
 
     total_ret = {}
+    
+    # get lseg embedding from file
+    path = os.path.join(lseg_root, file_name + "_color.pkl")
+    with open(path, "rb") as f:
+        lseg_emd = pickle.load(f)
+        # lseg_emd['feat_ori'] = lseg_emd['feat']
+        # lseg_emd["feat"] = torch.tensor(lseg_emd['feat']).float()
+        # lseg_emd["feat"] = torch.nn.functional.interpolate(lseg_emd["feat"].unsqueeze(0), scale_factor=2, mode='bilinear', align_corners=False).squeeze(0).numpy()
 
-    for i in valid_info:
+    for i in tqdm.tqdm(valid_info):
         uv, xyz, lbl = i
         x, y, z = xyz
         u, v = uv
-
-        # get lseg embedding from file
-        path = os.path.join(lseg_root, file_name + ".pkl")
-        with open(path, "rb") as f:
-            lseg_emd = pickle.load(f)
 
         # process image first
         # first fill img_idx
         valid_img_idx.append(convert_idx(x, y, z))
         # second fill img_feat
-        valid_img_feat.append(lseg_emd["feat"][:, :, u // 6, v // 8])
+        valid_img_feat.append(lseg_emd["feat"][:, u // 6, v // 8])
         # then fill img_weight
         weight = get_cos_similar(
-            clip_word_embedding[lbl], lseg_emd["feat"][0, :, u // 6, v // 8])
+            clip_word_embedding[lbl], lseg_emd["feat"][:, u // 6, v // 8])
         valid_img_weight.append(weight)
 
         # process word now
@@ -84,17 +88,17 @@ def process_one_frame(file_name, valid_info):
     if len(valid_img_idx) == 0:
         # hack logic
         valid_img_idx.append(convert_idx(0, 0, 0))
-        valid_img_feat.append(lseg_emd["feat"][:, :, 0, 0])
+        valid_img_feat.append(lseg_emd["feat"][:, 0, 0])
         valid_img_weight.append(0)
 
     total_ret["lseg_2d"] = lseg_emd["feat"]
     total_ret["valid_img_idx"] = np.array(valid_img_idx)
     total_ret["valid_img_weight"] = np.array(valid_img_weight)
-    total_ret["valid_img_feat"] = np.concatenate(valid_img_feat, axis=0)
+    total_ret["valid_img_feat"] = np.stack(valid_img_feat)
 
     total_ret["valid_word_idx"] = np.array(valid_word_idx)
     total_ret["valid_word_lbl"] = np.array(valid_word_lbl)
-    total_ret["valid_word_feat"] = np.concatenate(valid_word_feat, axis=0)
+    total_ret["valid_word_feat"] = np.stack(valid_word_feat)
 
     return total_ret
 
@@ -112,13 +116,13 @@ if __name__ == "__main__":
         info = read_json("./nyu_naive_valid_pairs.json")
     # feed in clip word embedding
     clip_word_embedding = get_clip_word_embedding(
-        "")  # /path/to/nyu_prompt_embedding.json
+        "tools/prompt_embedding/nyu_prompt_embedding.json")  # /path/to/nyu_prompt_embedding.json
     # set lseg root path
-    lseg_root = ""  # /path/to/lseg_embedding_nyu
+    lseg_root = "dataset/NYU/lseg_embedding_nyu"  # /path/to/lseg_embedding_nyu
 
     # step2. traverse and process each frame
     if not naive:
-        save_root = ""  # /path/to/save_path
+        save_root = "dataset/NYU/processed_total"  # /path/to/save_path
     else:
         save_root = ""  # /path/to/naive_save_path
 
